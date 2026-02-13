@@ -432,7 +432,7 @@ if module == "Pre-Start Estimator":
                 "Planned_Duration": st.column_config.NumberColumn("Days", min_value=1),
                 "Predecessors": st.column_config.TextColumn("Predecessors", help="Comma separated IDs e.g. '1,3'")
             },
-            use_container_width=True,
+            width='stretch',
             height=400,
             key="wbs_editor"
         )
