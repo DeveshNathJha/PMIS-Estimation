@@ -419,38 +419,7 @@ if module == "Pre-Start Estimator":
         default_wbs = get_wbs_template_from_data(p_type)
         category_options = sorted(df['Task_Category'].unique())
 
-        # Ensure Phase column exists (default to 'Phase 1') so phases are present by default
-        if 'Phase' not in default_wbs.columns:
-            default_wbs['Phase'] = 'Phase 1'
-
-        # Initialize phases in session state so they persist across reruns
-        if 'phases' not in st.session_state:
-            st.session_state['phases'] = sorted(default_wbs['Phase'].dropna().unique().tolist()) or ['Phase 1']
-
         st.info("Dependencies: Enter Task IDs (e.g., '1,2'). ID 1 is the first task.")
-
-        # Phase manager (add / delete phases)
-        with st.expander('Manage Phases', expanded=False):
-            col_a, col_b = st.columns([3, 1])
-            with col_a:
-                new_phase_name = st.text_input('Add Phase (name)', key='new_phase_name')
-            with col_b:
-                if st.button('Add Phase'):
-                    if new_phase_name and new_phase_name not in st.session_state['phases']:
-                        st.session_state['phases'].append(new_phase_name)
-                        st.session_state['phases'].sort()
-                        st.success(f'Phase "{new_phase_name}" added')
-
-            # Delete phases
-            del_choice = st.selectbox('Delete Phase', options=['-- select --'] + st.session_state['phases'], key='del_phase')
-            if st.button('Delete Phase Selected'):
-                if del_choice and del_choice != '-- select --' and del_choice in st.session_state['phases']:
-                    # reassign any tasks of deleted phase to 'Unassigned'
-                    default_wbs.loc[default_wbs['Phase'] == del_choice, 'Phase'] = 'Unassigned'
-                    st.session_state['phases'].remove(del_choice)
-                    st.success(f'Phase "{del_choice}" deleted; tasks reassigned to Unassigned')
-
-        phases = st.session_state.get('phases', ['Phase 1'])
 
         # Prepare the data_editor with Phase selectbox
         edited_wbs = st.data_editor(
@@ -461,8 +430,7 @@ if module == "Pre-Start Estimator":
                 "Task_Name": st.column_config.TextColumn("Task Name", width="large"),
                 "Task_Category": st.column_config.SelectboxColumn("Category", options=category_options, required=True, width="medium"),
                 "Planned_Duration": st.column_config.NumberColumn("Days", min_value=1),
-                "Predecessors": st.column_config.TextColumn("Predecessors", help="Comma separated IDs e.g. '1,3'"),
-                "Phase": st.column_config.SelectboxColumn("Phase", options=phases, required=True)
+                "Predecessors": st.column_config.TextColumn("Predecessors", help="Comma separated IDs e.g. '1,3'")
             },
             use_container_width=True,
             height=400,
@@ -496,7 +464,7 @@ if module == "Pre-Start Estimator":
                     orow = o.loc[tid].to_dict()
                     nrow = n.loc[tid].to_dict()
                     changes = {}
-                    for col in ['Task_Name','Task_Category','Planned_Duration','Predecessors','Phase']:
+                    for col in ['Task_Name','Task_Category','Planned_Duration','Predecessors']:
                         oval = orow.get(col)
                         nval = nrow.get(col)
                         # Normalize NaN -> None for comparison
@@ -670,13 +638,6 @@ if module == "Pre-Start Estimator":
                 predicted_durations = models['P50'].predict(input_df)
                 edited_wbs['Predicted_Duration'] = predicted_durations.astype(int)
 
-                # --- Phase-level summaries ---
-                try:
-                    phase_summary_df = edited_wbs.groupby('Phase').agg({'Planned_Duration':'sum','Predicted_Duration':'sum'}).reset_index()
-                    phase_summary_df['Delta'] = phase_summary_df['Predicted_Duration'] - phase_summary_df['Planned_Duration']
-                except Exception:
-                    phase_summary_df = None
-                
                 # --- STEP C: GENERATE GRANULAR REASONS ---
                 delay_reasons = []
                 for i, row in input_df.iterrows():
@@ -736,8 +697,6 @@ if module == "Pre-Start Estimator":
                 
                 # Prepare phase summary list for PDF (list of tuples)
                 phase_summary_list = None
-                if 'phase_summary_df' in locals() and phase_summary_df is not None:
-                    phase_summary_list = [(row['Phase'], row['Planned_Duration'], row['Predicted_Duration']) for _, row in phase_summary_df.iterrows()]
 
                 pdf_bytes = generate_pdf_report(
                     p_type,
@@ -757,9 +716,6 @@ if module == "Pre-Start Estimator":
                     st.markdown("### Executive Summary")
                     st.metric("Estimated Completion Date", finish_date.strftime('%d %b %Y'), f"Total Duration: {int(cpm_duration)} Days")
                     # Phase-level UI summary
-                    if phase_summary_df is not None:
-                        st.markdown('#### Phase Summaries')
-                        st.table(phase_summary_df.rename(columns={'Planned_Duration':'Planned (days)','Predicted_Duration':'Predicted (days)','Delta':'Δ (days)'}))
                 with c2: 
                     st.download_button("Download PDF Report", pdf_bytes, "Project_Report.pdf", "application/pdf")
                 
