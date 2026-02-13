@@ -1,0 +1,15 @@
+pandas
+numpy
+scikit-learn
+catboost
+shap
+streamlit
+plotly
+graphviz
+fpdf
+joblib
+matplotlib
+seaborn
+openpyxl
+networkx
+scipy
