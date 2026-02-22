@@ -1,6 +1,8 @@
 import json
 import os
 import sys
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config import *
 
 nb_cells = []
@@ -10,7 +12,7 @@ nb_cells.append({
     "cell_type": "markdown",
     "metadata": {},
     "source": [
-        "# KPMG Advisory: PMIS AI Engine Training v8.0 (Production Grade)\n",
+        "# Strategic Project Analytics: AI Engine Training v2.0 (Production Grade)\n",
         "\n",
         "**Objective:** Train a Context-Aware AI Model to predict project delays using Probabilistic Quantile Regression.\n",
         "\n",
@@ -31,6 +33,9 @@ nb_cells.append({
     "metadata": {},
     "outputs": [],
     "source": [
+        "import sys\n",
+        "import os\n",
+        "sys.path.append(os.path.abspath(os.path.join(os.getcwd(), '..')))\n",
         "import pandas as pd\n",
         "import numpy as np\n",
         "import matplotlib.pyplot as plt\n",
@@ -39,6 +44,10 @@ nb_cells.append({
         "from sklearn.model_selection import train_test_split\n",
         "from sklearn.feature_extraction.text import TfidfVectorizer\n",
         "from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error\n",
+        "from sklearn.linear_model import BayesianRidge\n",
+        "from sklearn.preprocessing import OneHotEncoder\n",
+        "from sklearn.compose import ColumnTransformer\n",
+        "from sklearn.pipeline import Pipeline\n",
         "import shap\n",
         "import joblib\n",
         "import os\n",
@@ -48,7 +57,8 @@ nb_cells.append({
         "from config import (\n",
         "    TEST_SIZE, RANDOM_STATE, QUANTILES, CATBOOST_PARAMS,\n",
         "    FEATURES, CATEGORICAL_FEATURES, TARGET_VARIABLE,\n",
-        "    TFIDF_MAX_FEATURES, TFIDF_STOP_WORDS, KPMG_BLUE\n",
+        "    TFIDF_MAX_FEATURES, TFIDF_STOP_WORDS,\n",
+        "    DATA_FILE, MODEL_OUTPUT_FILE\n",
         ")\n",
         "\n",
         "sns.set_theme(style='whitegrid')\n",
@@ -72,10 +82,10 @@ nb_cells.append({
         "]\n",
         "\n",
         "try:\n",
-        "    if not os.path.exists('kpmg_pmis_synthetic_data.csv'):\n",
-        "        raise FileNotFoundError('Data file not found: kpmg_pmis_synthetic_data.csv')\n",
+        "    if not os.path.exists(DATA_FILE):\n",
+        "        raise FileNotFoundError(f'Data file not found: {DATA_FILE}')\n",
         "    \n",
-        "    df = pd.read_csv('kpmg_pmis_synthetic_data.csv')\n",
+        "    df = pd.read_csv(DATA_FILE)\n",
         "    \n",
         "    missing_cols = set(required_columns) - set(df.columns)\n",
         "    if missing_cols:\n",
@@ -234,6 +244,35 @@ nb_cells.append({
     ]
 })
 
+# CELL 7b: Future NLP Integration (Placeholder)
+nb_cells.append({
+    "cell_type": "code",
+    "execution_count": None,
+    "metadata": {},
+    "outputs": [],
+    "source": [
+        "# --- FUTURE IMPROVEMENT: NLP INTEGRATION ---\n",
+        "# To integrate TF-IDF vectors into the model, uncomment the following lines:\n",
+        "# \n",
+        "# print('Integrating TF-IDF features into training data...')\n",
+        "# tfidf_df = pd.DataFrame(tfidf_matrix.toarray(), columns=vectorizer.get_feature_names_out())\n",
+        "# \n",
+        "# # Reset indices to ensure alignment\n",
+        "# X.reset_index(drop=True, inplace=True)\n",
+        "# tfidf_df.reset_index(drop=True, inplace=True)\n",
+        "# \n",
+        "# # Concatenate numerical/categorical features with TF-IDF\n",
+        "# X_extended = pd.concat([X, tfidf_df], axis=1)\n",
+        "# \n",
+        "# # Update train-test split with extended features\n",
+        "# X_train, X_test, y_train, y_test = train_test_split(\n",
+        "#     X_extended, y, test_size=TEST_SIZE, random_state=RANDOM_STATE\n",
+        "# )\n",
+        "# \n",
+        "# print(f'Extended Feature Set Dimensions: {X_extended.shape}')"
+    ]
+})
+
 # CELL 8: Model Training Section
 nb_cells.append({
     "cell_type": "markdown",
@@ -296,6 +335,49 @@ nb_cells.append({
         "    print(f'   Train -> MAE: {train_mae:.2f} days | R2: {train_r2:.4f}')\n",
         "    print(f'   Test  -> MAE: {test_mae:.2f} days | R2: {test_r2:.4f}')\n",
         "    print(f'   RMSE -> Train: {train_rmse:.2f} | Test: {test_rmse:.2f}')\n",
+        "\n",
+        "# --- Bayesian Ridge Model (For Comparison) ---\n",
+        "print(f'\\nTraining Bayesian Ridge (Baseline Comparison)...')\n",
+        "\n",
+        "# Preprocessing pipeline for Bayesian Ridge (needs OHE for categoricals)\n",
+        "preprocessor = ColumnTransformer(\n",
+        "    transformers=[\n",
+        "        ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat_features)\n",
+        "    ],\n",
+        "    remainder='passthrough'\n",
+        ")\n",
+        "\n",
+        "bayesian_model = Pipeline(steps=[\n",
+        "    ('preprocessor', preprocessor),\n",
+        "    ('regressor', BayesianRidge())\n",
+        "])\n",
+        "\n",
+        "bayesian_model.fit(X_train, y_train)\n",
+        "models['BayesianRidge'] = bayesian_model\n",
+        "\n",
+        "y_pred_train_bayes = bayesian_model.predict(X_train)\n",
+        "y_pred_test_bayes = bayesian_model.predict(X_test)\n",
+        "\n",
+        "b_train_mae = mean_absolute_error(y_train, y_pred_train_bayes)\n",
+        "b_test_mae = mean_absolute_error(y_test, y_pred_test_bayes)\n",
+        "b_train_r2 = r2_score(y_train, y_pred_train_bayes)\n",
+        "b_test_r2 = r2_score(y_test, y_pred_test_bayes)\n",
+        "b_train_rmse = np.sqrt(mean_squared_error(y_train, y_pred_train_bayes))\n",
+        "b_test_rmse = np.sqrt(mean_squared_error(y_test, y_pred_test_bayes))\n",
+        "\n",
+        "model_metrics['BayesianRidge'] = {\n",
+        "    'train_mae': b_train_mae,\n",
+        "    'test_mae': b_test_mae,\n",
+        "    'train_r2': b_train_r2,\n",
+        "    'test_r2': b_test_r2,\n",
+        "    'train_rmse': b_train_rmse,\n",
+        "    'test_rmse': b_test_rmse\n",
+        "}\n",
+        "\n",
+        "print(f'\\nBayesianRidge Model Performance:')\n",
+        "print(f'   Train -> MAE: {b_train_mae:.2f} days | R2: {b_train_r2:.4f}')\n",
+        "print(f'   Test  -> MAE: {b_test_mae:.2f} days | R2: {b_test_r2:.4f}')\n",
+        "print(f'   RMSE -> Train: {b_train_rmse:.2f} | Test: {b_test_rmse:.2f}')\n",
         "\n",
         "print(f'\\n' + '='*80)\n",
         "print('All Models Trained Successfully!')\n",
@@ -531,7 +613,7 @@ nb_cells.append({
         "        'corpus': corpus,\n",
         "        'project_types': list(PROJECT_TEMPLATES.keys()),\n",
         "        'jharkhand_map': JHARKHAND_MAP,\n",
-        "        'version': 'KPMG PMIS v8.0',\n",
+        "        'version': 'PMIS v8.0',\n",
         "        'description': 'Production-Ready Probabilistic Duration Prediction Engine',\n",
         "        'model_config': {\n",
         "            'quantiles': QUANTILES,\n",
@@ -544,7 +626,7 @@ nb_cells.append({
         "        'training_date': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')\n",
         "    }\n",
         "    \n",
-        "    output_file = 'kpmg_pmis_model.pkl'\n",
+        "    output_file = MODEL_OUTPUT_FILE\n",
         "    joblib.dump(artifact, output_file)\n",
         "    file_size = os.path.getsize(output_file) / (1024*1024)\n",
         "    \n",
@@ -567,7 +649,7 @@ nb_cells.append({
 
 # Generate notebook
 try:
-    output_file = 'Kpmg_Pmis_Training.ipynb'
+    output_file = NOTEBOOK_OUTPUT_FILE
     with open(output_file, 'w') as f:
         json.dump({"cells": nb_cells, "metadata": {}, "nbformat": 4, "nbformat_minor": 4}, f, indent=4)
     
