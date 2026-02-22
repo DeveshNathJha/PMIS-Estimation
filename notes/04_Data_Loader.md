@@ -10,6 +10,7 @@ This utility script is responsible for safely loading the heavy assets (Machine 
 ## How does it work?
 
 ### Function: `load_resources()`
+*Wrapped in `@st.cache_resource` to ensure the 4MB CatBoost model is loaded into server memory exactly once, preventing severe bottlenecks on every user interaction.*
 1.  **Sys Path Check:** It adds the root directory to `sys.path` so it can import `config`.
 2.  **Data Loading:**
     -   Checks if `data/synthetic_project_data.csv` exists.

@@ -10,13 +10,11 @@ Plans are never static. As a project progresses, we learn about the *actual* con
 
 ### Function: `render_tracker(df, context)`
 1.  **Task Selection:**
-    -   The user selects a "Current Phase" (e.g., Foundation).
-2.  **Progress Input:**
-    -   User inputs: *"Task started on X date. We are Y% complete."*
-3.  **Re-Forecasting Logic:**
-    -   It calculates the **Burn Rate** or "Velocity".
-    -   If the project is behind schedule on early tasks, it assumes this "friction" will continue for future tasks (unless mitigation is applied).
-    -   It updates the Start Dates of all future (dependent) tasks.
-4.  **Outputs:**
-    -   **Recovery Plan:** Suggests if "Crashing" (adding resources) is needed to catch up.
-    -   **New Est. Completion Date:** The updated finish line.
+    -   The user views tasks and assigns actual completion days.
+2.  **Re-Forecasting Logic (ML Inference):**
+    -   Calculates total actual days spent so far.
+    -   Constructs feature vectors for all remaining/pending tasks (incorporating shifting monsoon windows based on the new timeline).
+    -   Passes these remaining tasks back through the **CatBoost P50 Model** to generate a live, dynamic estimate of the remaining duration.
+3.  **Outputs:**
+    -   Generates AI-driven risk explanations for delayed tasks.
+    -   Produces an updated "Revised End Date" and mid-project PDF report.

@@ -21,8 +21,8 @@ This is the file you run: `streamlit run pmisapp.py`.
 
 ### 2. `app/main.py`
 This dictates the structure of the webpage.
--   **Setup:** Sets page title, layout (Wide mode), and injects CSS.
--   **Resource Loading:** Calls `load_resources()` to get data and the AI model into memory.
+-   **Setup & Logging:** Sets page title, layout, and configures central Python `logging` to track events (replacing old print statements).
+-   **Resource Loading:** Calls `load_resources()` to safely fetch data and models via Streamlit caching.
 -   **Sidebar Rendering:** Calls `render_sidebar` (from `app.ui.components`) to draw the inputs on the left.
 -   **Routing (The Switcher):** This is the core logic that decides which screen to show.
     ```python
@@ -32,3 +32,6 @@ This dictates the structure of the webpage.
         render_tracker(...)
     ```
     This "Router" pattern allows the app to feel like a multi-page tool even though it's a single-page app (SPA).
+
+## Architectural Note
+PMIS acts as a monolithic Streamlit application. There is currently **no FastAPI backend**. The UI layer, routing, and ML inference all execute synchronously within the Streamlit process. Future iterations must decouple this into a discrete FastAPI backend and Streamlit frontend.

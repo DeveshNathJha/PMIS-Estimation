@@ -26,4 +26,4 @@ This is the core value proposition of the tool: moving from "Deterministic" esti
     -   It identifies which tasks are "Critical" (cannot be delayed).
 6.  **Visualization:**
     -   **Gantt Chart:** Draws the timeline using Plotly.
-    -   **Explanation:** Uses the logic engine to explain *why* tasks are delayed (e.g., "LWE Risk + Monsoon").
+    -   Uses `try-except` blocks around Graphviz rendering, falling back gracefully with warnings instead of crashing if host dependencies are missing.
