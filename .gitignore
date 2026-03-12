@@ -27,3 +27,7 @@ coverage.xml
 *.swp
 *.swo
 *~
+
+# PPT files (except architecture diagram)
+ppt/
+!ppt/ARCHITECTURE_DIAGRAM_TEXT.md
