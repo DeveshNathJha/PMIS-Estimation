@@ -30,4 +30,4 @@ coverage.xml
 
 # PPT files (except architecture diagram)
 ppt/
-!ppt/ARCHITECTURE_DIAGRAM_TEXT.md
+!ppt/ARCHITECTURE_DIAGRAM_TEXT.md*.pptx
