@@ -11,9 +11,9 @@ Single-process Streamlit monolith. Everything runs in one Python process on loca
 ### Data Flow (Top to Bottom)
 
 ```
-USER (Browser)
+USER (Browser) / StreamlitCloud
   |
-  | HTTP request (localhost)
+  | HTTP request (localhost) / https://pmis-estimation.streamlit.app/
   v
 STREAMLIT APPLICATION
   |
