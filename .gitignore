@@ -31,3 +31,10 @@ coverage.xml
 # PPT files (except architecture diagram)
 ppt/
 !ppt/ARCHITECTURE_DIAGRAM_TEXT.md*.pptx
+
+# Ignored Docs and Notes
+notes/
+ARCHITECTURE_DIAGRAM_TEXT.md
+PMIS_Requirements_Document.md
+PHASE_2_API_ARCHITECTURE.md
+FastAPI_Review_Report.md

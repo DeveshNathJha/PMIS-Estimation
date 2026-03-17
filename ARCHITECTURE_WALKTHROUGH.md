@@ -9,16 +9,16 @@ The system operates in three distinct stages: **Simulation**, **Training**, and 
 ```mermaid
 graph TD
     subgraph Stage 1: Simulation
-    A[data_generation.py] -->|Simulates Ecosystem| B(Synthetic History CSV)
+    A[Data Generation Script] -->|Simulates Ecosystem| B(Synthetic History CSV)
     end
     
     subgraph Stage 2: Training
-    B --> C[model.py]
+    B --> C[Model Training Script]
     C -->|CatBoost Quantile Regression| D(Model Artifact .pkl)
     end
     
     subgraph Stage 3: Inference
-    D --> E[pmisapp.py]
+    D --> E[Inference Application]
     User[User Inputs] --> E
     E --> F[Forecasts & Reports]
     end
@@ -27,7 +27,6 @@ graph TD
 ---
 
 ## 2. Stage 1: The "Physics" of Data Generation
-**File:** `data_generation.py`
 
 To train the AI without sensitive client data, we created a **simulation engine** that mimics the real-world complexities of Indian infrastructure projects.
 
@@ -51,7 +50,6 @@ Specific "disasters" are probabilistically injected to teach the model about roo
 ---
 
 ## 3. Stage 2: AI Model Structure
-**File:** `model.py`
 
 The system uses **Quantile Regression** to provide probabilistic confidence intervals, not just a single number.
 
@@ -72,7 +70,6 @@ The model learns to correlate these inputs with the `Actual_Duration`:
 ---
 
 ## 4. Stage 3: The Inference Engine
-**File:** `pmisapp.py`
 
 When a user uses the "Pre-Start Estimator", the app performs the following steps:
 
